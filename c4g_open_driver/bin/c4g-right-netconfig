@@ -1,0 +1,20 @@
+#!/bin/sh
+
+LOCAL_IPS=10.2.12.149 # IP address of the network adapter on the Linux PC
+TARGET_IPS=10.2.12.150 # IP address of the SMP+ of the C4G Open
+TARGET_MAC_ADDRS=00:04:50:48:2E:10 # MAC address of the SMP+ of the C4G Open
+NETWORK_INTERFACE=enp8s0 # name of the network interface used to connect the PC to the C4G Open
+C4G_PORT_NUMBER=1000 # socket port number on which the communication with the robot occurs (1001 for left C4G, 1000 for right C4G)
+
+sudo ifconfig ${NETWORK_INTERFACE} down
+sudo ifconfig ${NETWORK_INTERFACE} up ${LOCAL_IPS}
+
+# Add the C4G Open IP/MAC mapping to the ARP table
+sudo arp -s ${TARGET_IPS} ${TARGET_MAC_ADDRS}
+
+# Make ports from C4G_PORT_NUMBER to 1024 unprivileged
+sudo sysctl net.ipv4.ip_unprivileged_port_start=${C4G_PORT_NUMBER}
+ 
+# Make ports from C4G_PORT_NUMBER+1 to 1024 privileged again
+sudo iptables -I INPUT -p tcp --dport `expr ${C4G_PORT_NUMBER} + 1`:1024 -j DROP
+sudo iptables -I INPUT -p udp --dport `expr ${C4G_PORT_NUMBER} + 1`:1024 -j DROP
