@@ -48,7 +48,9 @@
 #include <math.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <string>
 #include <c4g_open_driver/C4gOpenConstants.hpp>
+#include <c4g_open_driver/TokenManager.hpp>
 #include <pthread.h>
 #include <sched.h>
 
@@ -226,6 +228,10 @@ class C4gOpen
         bool canChangeMode[MAX_NUM_ARMS];                   //< Array of flags indicating if the open mode of a certain arm can be changed.
                                                             /**< The open mode of an arm can be changed only after having performed #exitFromOpen().*/
 
+        // Token authentication
+        TokenManager* tokenManager;                         //< Token manager for authentication
+        std::string currentToken;                           //< Current authentication token
+
         void resetInitPacket();
         void resetCommPacketRx();
         void resetCommPacketTx();
@@ -247,6 +253,7 @@ class C4gOpen
         bool checkMode(int32_t mode);
         bool checkFollowingError(int32_t arm, int32_t axis, float targetPosition);
         bool checkOperations();
+        bool checkTokenAuth();  //< Check if current token is valid for robot operations
 
     public:
         C4gOpen(int32_t port = DEFAULT_PORT_NUMBER);
@@ -303,6 +310,13 @@ class C4gOpen
         bool setExtra3(int32_t arm, int32_t axis, float extra3);
 
         bool waitForOpenMode4(int32_t arm);
+
+        // Token authentication methods
+        bool setAuthToken(const std::string& token);        //< Set authentication token for robot operations
+        bool isTokenAuthEnabled() const;                    //< Check if token authentication is enabled
+        std::string generateToken(const std::string& description = "");  //< Generate a new personal access token
+        bool revokeToken(const std::string& token);         //< Revoke a specific token
+        std::vector<std::string> listTokens();              //< List all valid tokens
 };
 
 #endif // _C4GOPEN_HPP_

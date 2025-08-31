@@ -659,6 +659,55 @@ In short, the configuration is performed by executing the following PDL2 instruc
 
 *NOTE: The last two instructions can be either executed from PDL2 program (using WinC4G) or from Teach Pendant (as described at [C4G Guide](doc/c4g_guide_it.pdf)). Moreover, to execute them from a PDL2 program using `SYS_CALL`, follow the documentation in section 11.127 at [PDL2 documentation](doc/PDL2_Language.pdf).*
 
+## **Personal Access Token Authentication**
+
+The C4G Open Driver supports optional token-based authentication to secure robot operations. This feature can be enabled to require valid personal access tokens for critical robot functions.
+
+### Enable Token Authentication
+
+```bash
+export C4G_TOKEN_AUTH_ENABLED=1
+```
+
+### Generate a Personal Access Token
+
+Use the token manager utility to create tokens:
+
+```bash
+# Generate a new token
+./scripts/c4g_token_manager.py generate --description "My robot control application"
+
+# List existing tokens
+./scripts/c4g_token_manager.py list
+
+# Check authentication status
+./scripts/c4g_token_manager.py status
+```
+
+### Using Tokens in Applications
+
+```cpp
+#include <c4g_open_driver/C4gOpen.hpp>
+
+C4gOpen robot(1001);
+
+// Set authentication token if required
+if (robot.isTokenAuthEnabled()) {
+    robot.setAuthToken("your_generated_token_here");
+}
+
+// Now perform robot operations
+robot.start();
+```
+
+For detailed information, see [Token Authentication Documentation](doc/TOKEN_AUTHENTICATION.md).
+
+### Test Token Authentication
+
+```bash
+rosrun c4g_open_driver TestTokenAuth
+```
+
 ### Tests currently covered
 
 The current script `goOpenAllAxes`, present in the teach pendant, makes it possible to perform **ONLY** the tests covered in this Readme, which are:

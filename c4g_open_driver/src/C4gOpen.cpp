@@ -48,10 +48,15 @@ C4gOpen::C4gOpen(int32_t port):
                     communicationTimeout(COMMUNICATION_TIMEOUT),
                     numberOfOpenAxes(0),
                     sampleTime(-1),
-                    lastError(NO_ERROR)
+                    lastError(NO_ERROR),
+                    tokenManager(nullptr)
 {
     c4gSocketLength = sizeof(sockaddr_in);
     startUpPacket = malloc(MAX_SIZE_OF_PACKETS);
+
+    // Initialize token manager
+    tokenManager = new TokenManager();
+    tokenManager->initialize();
 
     for (int32_t i = 0; i < MAX_NUM_ARMS * MAX_NUM_AXES_PER_ARM; i++)
         logicalToOpenMap[i] = -1;
@@ -75,6 +80,7 @@ C4gOpen::C4gOpen(int32_t port):
 C4gOpen::~C4gOpen()
 {
     free(startUpPacket);
+    delete tokenManager;
 }
 
 // Set fields of the initialization packet to their default value.
@@ -224,6 +230,12 @@ void C4gOpen::resetFlags()
 */
 bool C4gOpen::start()
 {
+    // Check token authentication before starting robot communication
+    if (!checkTokenAuth())
+    {
+        return false;
+    }
+
     bool retValue = true;
     int32_t ret;
 
@@ -1163,6 +1175,12 @@ bool C4gOpen::setMode(int32_t arm, int32_t mode)
 {
     bool retValue = true;
 
+    // Check token authentication first
+    if (!checkTokenAuth())
+    {
+        return false;
+    }
+
     if (!errorOccurred())
     {
         if (canChangeMode[arm - 1] || getMode(arm) == 0 || mode == getMode(arm))
@@ -2067,4 +2085,61 @@ bool C4gOpen::waitForOpenMode4(int32_t arm)
     }
 
     return ready;
+}
+
+// Token authentication methods
+
+bool C4gOpen::setAuthToken(const std::string& token)
+{
+    currentToken = token;
+    return true;
+}
+
+bool C4gOpen::isTokenAuthEnabled() const
+{
+    return tokenManager && tokenManager->isTokenAuthEnabled();
+}
+
+std::string C4gOpen::generateToken(const std::string& description)
+{
+    if (tokenManager) {
+        return tokenManager->generateToken(description);
+    }
+    return "";
+}
+
+bool C4gOpen::revokeToken(const std::string& token)
+{
+    if (tokenManager) {
+        return tokenManager->revokeToken(token);
+    }
+    return false;
+}
+
+std::vector<std::string> C4gOpen::listTokens()
+{
+    if (tokenManager) {
+        return tokenManager->listTokens();
+    }
+    return std::vector<std::string>();
+}
+
+bool C4gOpen::checkTokenAuth()
+{
+    if (!tokenManager || !tokenManager->isTokenAuthEnabled()) {
+        // Token auth disabled, allow operation
+        return true;
+    }
+    
+    if (currentToken.empty()) {
+        lastError = TOKEN_AUTHENTICATION_FAILED;
+        return false;
+    }
+    
+    if (!tokenManager->validateToken(currentToken)) {
+        lastError = TOKEN_AUTHENTICATION_FAILED;
+        return false;
+    }
+    
+    return true;
 }

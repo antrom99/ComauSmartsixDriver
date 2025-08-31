@@ -127,7 +127,8 @@ enum ErrorCodes
     SET_FFW_VELOCITY_MISSING,       /**< Feedforward velocity not set even if requested by the actual open mode. */
     SET_FFW_CURRENT_MISSING,        /**< Feedforward current not set even if requested by the actual open mode. */
     SET_DELTA_CURRENT_MISSING,      /**< Delta current not set even if requested by the actual open mode. */
-    FOLLOWING_ERROR_OVERCOME        /**< Following error threshold overcome. */
+    FOLLOWING_ERROR_OVERCOME,       /**< Following error threshold overcome. */
+    TOKEN_AUTHENTICATION_FAILED     /**< Token authentication failed - invalid or missing token. */
 };
 
 #endif // _C4GOPENCONSTANTS_HPP_

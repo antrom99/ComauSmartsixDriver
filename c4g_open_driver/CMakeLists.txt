@@ -120,7 +120,7 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(${LIBRARY_NAME} src/C4gOpen.cpp)
+add_library(${LIBRARY_NAME} src/C4gOpen.cpp src/TokenManager.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -164,6 +164,10 @@ add_executable(
 
 add_executable(
     TestMode0Debug_print_joint_values test/TestMode0Debug_print_joint_values.cpp 
+)
+
+add_executable(
+    TestTokenAuth test/TestTokenAuth.cpp 
 )
 
 ## Rename C++ executable without prefix
@@ -220,6 +224,11 @@ target_link_libraries(
 
 target_link_libraries(
     TestMode0Debug_print_joint_values
+    ${LIBRARY_NAME}
+)
+
+target_link_libraries(
+    TestTokenAuth
     ${LIBRARY_NAME}
 )
 
